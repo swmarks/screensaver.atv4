@@ -104,6 +104,19 @@
 					</dependencies>
 					<control type="toggle"/>
 				</setting>
+				<setting id="toggle-systemoff" type="boolean" label="13016" help="">
+					<level>0</level>
+					<default>false</default>
+					<dependencies>
+						<dependency type="visible">
+							<or>
+								<condition operator="is" setting="check-dpms">1</condition>
+								<condition operator="is" setting="check-dpms">2</condition>
+							</or>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>
 			</group>
 			<group id="3" label="32033"/>
 			<group id="4" label="32034">

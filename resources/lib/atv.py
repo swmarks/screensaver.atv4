@@ -76,12 +76,13 @@ class Screensaver(xbmcgui.WindowXML):
         # Take action on the video
         enable_window_placeholder = False
         if addon.getSettingInt("dpms-action") == 0:
-            self.atv4player.pause()
+            if self.atv4player:
+                self.atv4player.pause()
         else:
             self.clearAll()
             enable_window_placeholder = True
 
-        if addon.getSettingBool("toggle-displayoff") or addon.getSettingBool("toggle-cecoff"):
+        if addon.getSettingBool("toggle-displayoff") or addon.getSetting("toggle-cecoff") == "true" or addon.getSettingBool("toggle-systemoff"):
             monitor.waitForAbort(1)
 
         if addon.getSettingBool("toggle-displayoff"):
@@ -96,6 +97,14 @@ class Screensaver(xbmcgui.WindowXML):
                 xbmc.executebuiltin('CECStandby')
             except Exception as e:
                 xbmc.log(msg=f"[Aerial Screensaver] Failed to toggle device off via CEC: {e}",
+                         level=xbmc.LOGDEBUG)
+
+        if addon.getSettingBool("toggle-systemoff"):
+            try:
+                xbmc.log(msg="[Aerial Screensaver] Triggering full system power down.", level=xbmc.LOGDEBUG)
+                xbmc.executebuiltin('ShutDown')
+            except Exception as e:
+                xbmc.log(msg=f"[Aerial Screensaver] Failed to shut down system: {e}",
                          level=xbmc.LOGDEBUG)
 
         # Enable placeholder window
