@@ -1,3 +1,10 @@
+v10.3.0.3 (2026-06-15)
+- Bumped major version to override upstream Kodi repository, keeping Kodi repo version as suffix
+- Transitioned to native Kodi C++ playlist engine
+- Added video title (sourced from Apple's JSON) and date/time overlay (with Arctic Fuse 3 font styling)
+- Added toggle in the add-on settings to enable/disable 'Show information' overlay (default: disabled)
+- Added explicit OS-level 'System Power Off' option to DPMS
+
 v3.0.3  (2022-01-01)
 - New scenes added (Patagonia, Yosemite, Grand Canyon, Iceland, Scotland)
 - Updated Apple resources.tar entries.json URL
