@@ -65,6 +65,7 @@
 		    <visible>true</visible>
 		</control>
 		<control type="grouplist" id="32504">
+				<visible>String.IsEqual(Window.Property(show-info),true)</visible>
 				<left>40</left>
 				<bottom>40</bottom>
 				<width>540</width>

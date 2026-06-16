@@ -36,6 +36,8 @@ class Screensaver(xbmcgui.WindowXML):
     def onInit(self):
         self.getControl(32502).setLabel(translate(32008))
         self.setProperty("screensaver-atv4-loading", "true")
+        # Pass the user's text overlay preference to the XML
+        self.setProperty("show-info", addon.getSetting("show-info"))
 
         if self.video_playlist:
             self.setProperty("screensaver-atv4-loading", "false")
