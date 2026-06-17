@@ -1,3 +1,7 @@
+v11.3.0.3 (2026-06-17)
+- Added settings to change DV OSD luminance for CoreELEC while screensaver is running
+- Added fade out and fade in transitions when videos stop and start
+
 v10.3.0.3 (2026-06-15)
 - Bumped major version to override upstream Kodi repository, keeping Kodi repo version as suffix
 - Transitioned to native Kodi C++ playlist engine

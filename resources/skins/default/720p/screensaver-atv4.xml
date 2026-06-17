@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <window type="window">
     <controls>
-    	<control type="image">
+        <control type="image">
             <description>blackbackground</description>
             <posx>0</posx>
             <posy>0</posy>
@@ -22,76 +22,103 @@
             <texture>sanfrancisco.jpg</texture>
             <visible>!String.IsEqual(Window.Property(screensaver-atv4-loading),"false")</visible>
         </control>
-		<control type="image" id ="32501">
-				<description>Busy animation</description>
-				<posx>40</posx>
-				<posy>685</posy>
-				<width>30</width>
-				<height>30</height>
-				<texture>busy.png</texture>
-				<aspectratio>keep</aspectratio>
-				<animation effect="rotate" start="0" end="360" center="55,700" time="1200" loop="true" condition="true">conditional</animation>
-				<visible>!String.IsEqual(Window.Property(screensaver-atv4-loading),"false")</visible>
-		</control>
-		<control type="label" id ="32502">
-				<top>655</top>
-				<left>90</left>
-				<width>600</width>
-				<height>90</height>
-				<font>font11</font>
-				<textcolor>88FFFFFF</textcolor>
-				<aligny>center</aligny>
-				<align>left</align>
-				<label></label>
-				<visible>!String.IsEqual(Window.Property(screensaver-atv4-loading),"false")</visible>
-		</control>
-		<control type="label" id="32503">
-				<top>655</top>
-				<left>40</left>
-				<width>600</width>
-				<height>90</height>
-				<font>font11</font>
-				<textcolor>88FFFFFF</textcolor>
-				<aligny>center</aligny>
-				<align>left</align>
-				<label></label>
-		</control>
-		<control type="videowindow">
-			<description>VideoWindow</description>
-		    <posx>0</posx>
-		    <posy>0</posy>
-		    <width>1280</width>
-		    <height>720</height>
-		    <visible>true</visible>
-		</control>
-		<control type="grouplist" id="32504">
-				<visible>String.IsEqual(Window.Property(show-info),true)</visible>
-				<left>40</left>
-				<bottom>40</bottom>
-				<width>540</width>
-				<height>60</height> 
-				<itemgap>0</itemgap>
-				<orientation>vertical</orientation>
-				<control type="label">
-						<width>540</width>
-						<height>34</height> 
-						<font>font_head_bold</font> 
-						<textcolor>FFFFFFFF</textcolor> 
-						<shadowcolor>FF000000</shadowcolor> 
-						<aligny>bottom</aligny>
-						<align>left</align>
-						<label>$INFO[Window.Property(AerialLocation)]</label>
-				</control>
-				<control type="label">
-						<width>540</width>
-						<height>26</height> 
-						<font>font_main</font> 
-						<textcolor>FFFFFFFF</textcolor> 
-						<shadowcolor>FF000000</shadowcolor>
-						<aligny>top</aligny> 
-						<align>left</align>
-						<label>$INFO[System.Date], $INFO[System.Time]</label>
-				</control>
-		</control>
+        <control type="image" id ="32501">
+                <description>Busy animation</description>
+                <posx>40</posx>
+                <posy>685</posy>
+                <width>30</width>
+                <height>30</height>
+                <texture>busy.png</texture>
+                <aspectratio>keep</aspectratio>
+                <animation effect="rotate" start="0" end="360" center="55,700" time="1200" loop="true" condition="true">conditional</animation>
+                <visible>!String.IsEqual(Window.Property(screensaver-atv4-loading),"false")</visible>
+        </control>
+        <control type="label" id ="32502">
+                <top>655</top>
+                <left>90</left>
+                <width>600</width>
+                <height>90</height>
+                <font>font11</font>
+                <textcolor>88FFFFFF</textcolor>
+                <aligny>center</aligny>
+                <align>left</align>
+                <label></label>
+                <visible>!String.IsEqual(Window.Property(screensaver-atv4-loading),"false")</visible>
+        </control>
+        <control type="label" id="32503">
+                <top>655</top>
+                <left>40</left>
+                <width>600</width>
+                <height>90</height>
+                <font>font11</font>
+                <textcolor>88FFFFFF</textcolor>
+                <aligny>center</aligny>
+                <align>left</align>
+                <label></label>
+        </control>
+        <control type="videowindow">
+            <description>VideoWindow</description>
+            <posx>0</posx>
+            <posy>0</posy>
+            <width>1280</width>
+            <height>720</height>
+            <visible>true</visible>
+        </control>
+        
+		<!-- The Shutter Mask: Uses Explicit Visibility linking to guarantee perfectly synced fades -->
+        <control type="image">
+            <description>Transition Shutter</description>
+            <posx>0</posx>
+            <posy>0</posy>
+            <width>1280</width>
+            <height>720</height>
+            <texture>black.jpg</texture>
+            <!-- Render solid black when fade-black is true -->
+            <visible>String.IsEqual(Window.Property(fade-black),true)</visible>
+            <!-- When True: Fade up to black -->
+            <animation effect="fade" start="0" end="100" time="2000">Visible</animation>
+            <!-- When False: Fade down to transparent -->
+            <animation effect="fade" start="100" end="0" time="2000">Hidden</animation>
+        </control>
+        
+        <control type="grouplist" id="32504">
+		        <!-- Render text only when show-info is true AND the shutter is currently open (false) -->
+				<visible>String.IsEqual(Window.Property(show-info),true) + String.IsEqual(Window.Property(fade-black),false)</visible>
+				<!-- When True: Fade in from transparent -->
+				<animation effect="fade" start="0" end="100" time="2000">Visible</animation>
+				<!-- When False: Fade out to transparent -->
+				<animation effect="fade" start="100" end="0" time="2000">Hidden</animation>
+
+                <left>40</left>
+                <bottom>40</bottom>
+                <width>600</width>
+                <!-- Expanded to 70 to protect the bottom strings -->
+                <height>70</height> 
+                <itemgap>0</itemgap>
+                <orientation>vertical</orientation>
+                <control type="label">
+                        <width>600</width>
+                        <!-- Expanded to 40 -->
+                        <height>40</height> 
+                        <font>font_head_bold</font> 
+                        <textcolor>FFFFFFFF</textcolor> 
+                        <shadowcolor>FF000000</shadowcolor> 
+                        <aligny>bottom</aligny>
+                        <align>left</align>
+                        <label>$INFO[Window.Property(AerialLocation)]</label>
+                </control>
+                <control type="label">
+                        <width>600</width>
+                        <!-- Expanded to 30 -->
+                        <height>30</height> 
+                        <font>font_main</font> 
+                        <textcolor>FFFFFFFF</textcolor> 
+                        <shadowcolor>FF000000</shadowcolor>
+                        <!-- Switched to top so it hugs the line above it -->
+                        <aligny>top</aligny> 
+                        <align>left</align>
+                        <label>$INFO[System.Date], $INFO[System.Time]</label>
+                </control>
+        </control>
    </controls>
 </window>

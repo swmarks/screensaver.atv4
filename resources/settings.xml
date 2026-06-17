@@ -18,6 +18,42 @@
 					<default>false</default>
 					<control type="toggle"/>
 				</setting>
+				<setting id="ce-dv-follow" type="boolean" label="32133" help="">
+					<level>0</level>
+					<default>true</default>
+					<dependencies>
+						<dependency type="visible">
+							<and>
+								<condition operator="is" setting="show-info">true</condition>
+								<condition operator="is" setting="enable-hdr">true</condition>
+							</and>
+						</dependency>
+					</dependencies>
+					<control type="toggle"/>
+				</setting>
+				<setting id="ce-dv-brightness" type="integer" label="32134" help="">
+					<level>0</level>
+					<default>2000</default>
+					<constraints>
+						<minimum>100</minimum>
+						<step>10</step>
+						<maximum>2000</maximum>
+					</constraints>
+					<dependencies>
+						<dependency type="visible">
+							<and>
+								<condition operator="is" setting="show-info">true</condition>
+								<condition operator="is" setting="enable-hdr">true</condition>
+							</and>
+						</dependency>
+						<dependency type="enable">
+							<condition operator="is" setting="ce-dv-follow">false</condition>
+						</dependency>
+					</dependencies>
+					<control type="slider" format="integer">
+						<popup>false</popup>
+					</control>
+				</setting>
 				<setting id="enable-4k" type="boolean" label="32075" help="">
 					<level>0</level>
 					<default>false</default>

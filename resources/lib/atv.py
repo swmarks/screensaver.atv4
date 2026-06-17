@@ -33,32 +33,40 @@ class Screensaver(xbmcgui.WindowXML):
         xbmc.log(msg=f"kodi dpms time: {self.DPMStime}", level=xbmc.LOGDEBUG)
         xbmc.log(msg=f"kodi dpms active: {self.isDPMSactive}", level=xbmc.LOGDEBUG)
 
+        # CoreELEC DV Luminance Hijack placeholders
+        self.dv_setting_id = "coreelec.amlogic.dolbyvision.osd.brightness"
+        self.original_dv_luminance = None
+
     def onInit(self):
         self.getControl(32502).setLabel(translate(32008))
         self.setProperty("screensaver-atv4-loading", "true")
-        # Pass the user's text overlay preference to the XML
         self.setProperty("show-info", addon.getSetting("show-info"))
+
+        # Apply CoreELEC DV Luminance Hijack
+        if addon.getSettingBool("enable-hdr") and addon.getSettingBool("show-info") and not addon.getSettingBool("ce-dv-follow"):
+            target_luminance = addon.getSettingInt("ce-dv-brightness")
+            try:
+                resp = xbmc.executeJSONRPC(f'{{"jsonrpc":"2.0","method":"Settings.GetSettingValue","params":{{"setting":"{self.dv_setting_id}"}},"id":1}}')
+                self.original_dv_luminance = json.loads(resp)['result']['value']
+                
+                if self.original_dv_luminance != target_luminance:
+                    xbmc.executeJSONRPC(f'{{"jsonrpc":"2.0","method":"Settings.SetSettingValue","params":{{"setting":"{self.dv_setting_id}", "value": {target_luminance}}},"id":1}}')
+                else:
+                    self.original_dv_luminance = None 
+            except Exception:
+                pass
 
         if self.video_playlist:
             self.setProperty("screensaver-atv4-loading", "false")
             self.atv4player = xbmc.Player()
 
-            # Start player thread
             threading.Thread(target=self.start_playback).start()
 
-            # DPMS logic
             self.max_allowed_time = None
-
             if self.isDPMSactive and addon.getSettingInt("check-dpms") == 1:
                 self.max_allowed_time = self.DPMStime
-
             elif addon.getSettingInt("check-dpms") == 2:
                 self.max_allowed_time = addon.getSettingInt("manual-dpms") * 60
-
-            xbmc.log(msg=f"check dpms: {addon.getSetting('check-dpms')}",
-                     level=xbmc.LOGDEBUG)
-            xbmc.log(msg=f"before supervision: {self.max_allowed_time}",
-                     level=xbmc.LOGDEBUG)
 
             if self.max_allowed_time:
                 delta = 0
@@ -72,10 +80,7 @@ class Screensaver(xbmcgui.WindowXML):
             self.novideos()
 
     def activateDPMS(self):
-        xbmc.log(msg="[Aerial Screensaver] Manually activating DPMS!", level=xbmc.LOGDEBUG)
         self.active = False
-
-        # Take action on the video
         enable_window_placeholder = False
         if addon.getSettingInt("dpms-action") == 0:
             if self.atv4player:
@@ -90,26 +95,21 @@ class Screensaver(xbmcgui.WindowXML):
         if addon.getSettingBool("toggle-displayoff"):
             try:
                 xbmc.executebuiltin('ToggleDPMS')
-            except Exception as e:
-                xbmc.log(msg=f"[Aerial Screensaver] Failed to toggle DPMS: {e}",
-                         level=xbmc.LOGDEBUG)
+            except Exception:
+                pass
 
         if addon.getSetting("toggle-cecoff") == "true":
             try:
                 xbmc.executebuiltin('CECStandby')
-            except Exception as e:
-                xbmc.log(msg=f"[Aerial Screensaver] Failed to toggle device off via CEC: {e}",
-                         level=xbmc.LOGDEBUG)
+            except Exception:
+                pass
 
         if addon.getSettingBool("toggle-systemoff"):
             try:
-                xbmc.log(msg="[Aerial Screensaver] Triggering full system power down.", level=xbmc.LOGDEBUG)
                 xbmc.executebuiltin('ShutDown')
-            except Exception as e:
-                xbmc.log(msg=f"[Aerial Screensaver] Failed to shut down system: {e}",
-                         level=xbmc.LOGDEBUG)
+            except Exception:
+                pass
 
-        # Enable placeholder window
         if enable_window_placeholder:
             self.toTransparent()
 
@@ -120,20 +120,24 @@ class Screensaver(xbmcgui.WindowXML):
 
     @classmethod
     def toTransparent(self):
-        trans = ScreensaverTrans(
-            'screensaver-atv4-trans.xml',
-            addon_path,
-            'default',
-            '',
-        )
+        trans = ScreensaverTrans('screensaver-atv4-trans.xml', addon_path, 'default', '')
         trans.doModal()
         xbmc.sleep(100)
         del trans
 
     def clearAll(self, close=True):
         self.active = False
+        
+        # Restore CoreELEC DV Luminance if hijacked
+        if getattr(self, 'original_dv_luminance', None) is not None:
+            try:
+                xbmc.executeJSONRPC(f'{{"jsonrpc":"2.0","method":"Settings.SetSettingValue","params":{{"setting":"{self.dv_setting_id}", "value": {self.original_dv_luminance}}},"id":1}}')
+            except Exception:
+                pass
+                
         if self.atv4player:
             self.atv4player.stop()
+            
         self.close()
 
     def onAction(self, action):
@@ -141,65 +145,72 @@ class Screensaver(xbmcgui.WindowXML):
         self.clearAll()
 
     def start_playback(self):
-        # 1. Setup the native Kodi Playlist
         playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
         playlist.clear()
         
-        # We need a quick dictionary to map URLs back to Locations for our polling loop
         url_to_location = {}
-        
-        # Populate the Kodi playlist with our array
         for video in self.video_playlist:
             url = video["url"]
             location = video["location"]
-            
-            # Create a basic ListItem so Kodi knows what it is handling
             list_item = xbmcgui.ListItem(location)
             playlist.add(url=url, listitem=list_item)
-            
-            # Store the mapping for the text overlay
             url_to_location[url] = location
 
-        # 2. Command Kodi to play the entire playlist at once
         self.atv4player.play(playlist, windowed=True)
         
         current_playing_url = None
+        is_transitioning = True 
         
-        # 3. Monitor loop to update the text and handle looping
         while self.active and not monitor.abortRequested():
-            monitor.waitForAbort(1)
+            monitor.waitForAbort(0.25)
             
             if self.active and self.atv4player.isPlaying():
                 try:
-                    # Ask Kodi what specific URL is currently rendering
+                    total_time = self.atv4player.getTotalTime()
+                    current_time = self.atv4player.getTime()
                     playing_url = self.atv4player.getPlayingFile()
                     
-                    # If the URL changed since the last second, update the overlay!
                     if playing_url != current_playing_url:
                         current_playing_url = playing_url
+                        is_transitioning = True
                         new_location = url_to_location.get(playing_url, "")
                         self.setProperty('AerialLocation', new_location)
+                    
+                    if total_time > 0 and (total_time - current_time) <= 3:
+                        is_transitioning = True
+                        
+                    elif is_transitioning and 0.5 <= current_time < 10.0:
+                        is_transitioning = False
+
+                    if is_transitioning:
+                        self.setProperty("fade-black", "true")
+                    else:
+                        self.setProperty("fade-black", "false")
+                        
                 except Exception:
-                    # getPlayingFile() can occasionally throw an error exactly during a gapless transition
+                    self.setProperty("fade-black", "true")
                     pass
                     
-            # If the entire playlist reaches the very end, start it over
             elif self.active and not self.atv4player.isPlaying():
-                self.atv4player.play(playlist, windowed=True)
+                self.setProperty("fade-black", "true")
+                
+                # Debounce: Wait up to 2 seconds to let Kodi natively load the next file
+                recovery_ticks = 0
+                while self.active and not self.atv4player.isPlaying() and recovery_ticks < 8:
+                    monitor.waitForAbort(0.25)
+                    recovery_ticks += 1
+                
+                # If it is STILL stopped after 2 seconds, the playlist naturally ended or network dropped
+                if self.active and not self.atv4player.isPlaying():
+                    self.atv4player.play(playlist, windowed=True)
 
 def run(params=False):
     if not params:
         addon.setSettingBool("is_locked", True)
-        screensaver = Screensaver(
-            'screensaver-atv4.xml',
-            addon_path,
-            'default',
-            '',
-        )
+        screensaver = Screensaver('screensaver-atv4.xml', addon_path, 'default', '')
+        screensaver.setProperty("fade-black", "true")
         screensaver.doModal()
         xbmc.sleep(100)
         del screensaver
-
     else:
-        # Params existed or was true when calling run(), so download files locally
         offline()

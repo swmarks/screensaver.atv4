@@ -64,18 +64,39 @@
 		    <height>1080</height>
 		    <visible>true</visible>
 		</control>
+
+		<!-- The Shutter Mask: Uses Explicit Visibility linking to guarantee perfectly synced fades -->
+        <control type="image">
+            <description>Transition Shutter</description>
+            <posx>0</posx>
+            <posy>0</posy>
+            <width>1920</width>
+            <height>1080</height>
+            <texture>black.jpg</texture>
+            <!-- Render solid black when fade-black is true -->
+            <visible>String.IsEqual(Window.Property(fade-black),true)</visible>
+            <!-- When True: Fade up to black -->
+            <animation effect="fade" start="0" end="100" time="2000">Visible</animation>
+            <!-- When False: Fade down to transparent -->
+            <animation effect="fade" start="100" end="0" time="2000">Hidden</animation>
+        </control>
+
 		<control type="grouplist" id="32504">
-				<visible>String.IsEqual(Window.Property(show-info),true)</visible>
+		        <!-- Render text only when show-info is true AND the shutter is currently open (false) -->
+				<visible>String.IsEqual(Window.Property(show-info),true) + String.IsEqual(Window.Property(fade-black),false)</visible>
+				<!-- When True: Fade in from transparent -->
+				<animation effect="fade" start="0" end="100" time="2000">Visible</animation>
+				<!-- When False: Fade out to transparent -->
+				<animation effect="fade" start="100" end="0" time="2000">Hidden</animation>
+				
 				<left>60</left>
 				<bottom>60</bottom>
 				<width>800</width>
-				<!-- Expanded to 90 to hold the two taller labels -->
 				<height>90</height> 
 				<itemgap>0</itemgap>
 				<orientation>vertical</orientation>
 				<control type="label">
 						<width>800</width>
-						<!-- Expanded to 50 -->
 						<height>50</height> 
 						<font>font_head_bold</font> 
 						<textcolor>FFFFFFFF</textcolor> 
@@ -86,12 +107,10 @@
 				</control>
 				<control type="label">
 						<width>800</width>
-						<!-- Expanded to 40 to protect the commas -->
 						<height>40</height> 
 						<font>font_main</font> 
 						<textcolor>FFFFFFFF</textcolor> 
 						<shadowcolor>FF000000</shadowcolor>
-						<!-- Switched to top so it hugs the line above it -->
 						<aligny>top</aligny> 
 						<align>left</align>
 						<label>$INFO[System.Date], $INFO[System.Time]</label>

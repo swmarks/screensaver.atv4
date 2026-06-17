@@ -441,3 +441,11 @@ msgstr ""
 msgctxt "#32132"
 msgid "Enable Yosemite"
 msgstr ""
+
+msgctxt "#32133"
+msgid "Follow CoreELEC OSD brightness"
+msgstr ""
+
+msgctxt "#32134"
+msgid "Aerial information brightness"
+msgstr ""
